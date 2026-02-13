@@ -58,9 +58,7 @@ const Hero = () => {
     const bar = barRef.current;
     const barContainer = barContainerRef.current;
 
-    /* -----------------------------
-       Circle Setup
-    ----------------------------- */
+    /* Circle Setup */
 
     const radius = 36;
     const circumference = 2 * Math.PI * radius;
@@ -68,9 +66,7 @@ const Hero = () => {
     circle.style.strokeDasharray = `${circumference}`;
     circle.style.strokeDashoffset = `${circumference}`;
 
-    /* -----------------------------
-       Mouse Follow
-    ----------------------------- */
+    /* Mouse Follow */
 
     const moveCursor = (e: MouseEvent) => {
       gsap.to(cursor, {
@@ -83,9 +79,7 @@ const Hero = () => {
 
     window.addEventListener("mousemove", moveCursor);
 
-    /* -----------------------------
-       GSAP
-    ----------------------------- */
+    /*GSAP*/
 
     const ctx = gsap.context(() => {
       gsap.set(demoTextRef.current, {
@@ -103,7 +97,6 @@ const Hero = () => {
           /* Progress Sync */
           onUpdate: (self) => {
             const progress = self.progress;
-            const percent = Math.round(progress * 100);
 
             /* Bar */
             gsap.to(bar, {
@@ -120,10 +113,6 @@ const Hero = () => {
               duration: 0.1,
               overwrite: true,
             });
-
-            /* Text */
-            const span = cursor.querySelector("span");
-            if (span) span.innerText = `${percent}%`;
           },
 
           /* Visibility */

@@ -99,7 +99,6 @@ const Harvestor = () => {
 
           onUpdate: (self) => {
             const progress = self.progress;
-            const percent = Math.round(progress * 100);
 
             /* Vertical bar */
             gsap.to(bar, {
@@ -116,10 +115,6 @@ const Harvestor = () => {
               duration: 0.1,
               overwrite: true,
             });
-
-            /* Text */
-            const span = cursor.querySelector("span");
-            if (span) span.innerText = `${percent}%`;
           },
 
           /* Visibility */
