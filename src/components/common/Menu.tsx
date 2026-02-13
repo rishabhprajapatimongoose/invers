@@ -1,6 +1,4 @@
 "use client";
-
-import { menu } from "motion/react-client";
 import { forwardRef } from "react";
 import DecryptedText from "./DecryptedText";
 import AnimatedText from "./AnimatedText";
