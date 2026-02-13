@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+
 import AnimatedText from "../../../components/common/AnimatedText";
 import DecryptedText from "../../../components/common/DecryptedText";
 import HeroSlideText from "../../../components/common/HeroSlideText";
@@ -10,25 +11,31 @@ import MaskedBackgroundImage from "../../../components/common/MaskedBackgroundIm
 import NotchedButton from "../../../components/ui/NotchButton";
 import HeroHotspots from "../../../components/common/HeroHotspots";
 
+import CircularCursorProgress from "../../../components/common/CircularCursorProgress";
 gsap.registerPlugin(ScrollTrigger);
 
 const Hero = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+
   const maskWrapperRef = useRef<HTMLDivElement>(null);
   const imageOneRef = useRef<HTMLDivElement>(null);
   const imageTwoRef = useRef<HTMLDivElement>(null);
-  const innerImgOneRef = useRef<HTMLImageElement>(null); // Ref for scrolling image 1
-  const innerImgTwoRef = useRef<HTMLImageElement>(null); // Ref for scrolling image 2
+
+  const innerImgOneRef = useRef<HTMLImageElement>(null);
+  const innerImgTwoRef = useRef<HTMLImageElement>(null);
+
   const slide3TextRef = useRef<HTMLDivElement>(null);
   const demoTextRef = useRef<HTMLDivElement>(null);
 
-  // Added Refs for UI Elements
+  /* Cursor */
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const circleRef = useRef<SVGCircleElement>(null);
+
+  /* Vertical Bar */
   const barRef = useRef<HTMLDivElement>(null);
   const barContainerRef = useRef<HTMLDivElement>(null);
-  const cursorRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    // Validation check including the new UI refs
     if (
       !containerRef.current ||
       !maskWrapperRef.current ||
@@ -38,22 +45,37 @@ const Hero = () => {
       !innerImgTwoRef.current ||
       !slide3TextRef.current ||
       !demoTextRef.current ||
+      !cursorRef.current ||
+      !circleRef.current ||
       !barRef.current ||
-      !barContainerRef.current ||
-      !cursorRef.current
+      !barContainerRef.current
     ) {
       return;
     }
 
+    const cursor = cursorRef.current;
+    const circle = circleRef.current;
     const bar = barRef.current;
     const barContainer = barContainerRef.current;
-    const cursor = cursorRef.current;
 
-    // Mouse follow for the custom cursor
+    /* -----------------------------
+       Circle Setup
+    ----------------------------- */
+
+    const radius = 36;
+    const circumference = 2 * Math.PI * radius;
+
+    circle.style.strokeDasharray = `${circumference}`;
+    circle.style.strokeDashoffset = `${circumference}`;
+
+    /* -----------------------------
+       Mouse Follow
+    ----------------------------- */
+
     const moveCursor = (e: MouseEvent) => {
       gsap.to(cursor, {
-        x: e.clientX - 32,
-        y: e.clientY - 32,
+        x: e.clientX - 40,
+        y: e.clientY - 40,
         duration: 0.15,
         ease: "power2.out",
       });
@@ -61,8 +83,11 @@ const Hero = () => {
 
     window.addEventListener("mousemove", moveCursor);
 
+    /* -----------------------------
+       GSAP
+    ----------------------------- */
+
     const ctx = gsap.context(() => {
-      // Initial state for overlay text
       gsap.set(demoTextRef.current, {
         opacity: 0,
         filter: "blur(12px)",
@@ -74,38 +99,72 @@ const Hero = () => {
           start: "top top",
           end: "bottom bottom",
           scrub: 1,
-          // Progress handling
+
+          /* Progress Sync */
           onUpdate: (self) => {
+            const progress = self.progress;
+            const percent = Math.round(progress * 100);
+
+            /* Bar */
             gsap.to(bar, {
-              height: `${self.progress * 100}%`,
+              height: `${progress * 100}%`,
               duration: 0.1,
               overwrite: true,
             });
+
+            /* Circle */
+            const offset = circumference * (1 - progress);
+
+            gsap.to(circle, {
+              strokeDashoffset: offset,
+              duration: 0.1,
+              overwrite: true,
+            });
+
+            /* Text */
+            const span = cursor.querySelector("span");
+            if (span) span.innerText = `${percent}%`;
           },
-          // Sync visibility of both UI elements
+
+          /* Visibility */
           onEnter: () => {
-            gsap.to([barContainer, cursor], { opacity: 1, duration: 0.3 });
-            gsap.to(cursor, { scale: 1, duration: 0.3 });
+            gsap.to([cursor, barContainer], {
+              opacity: 1,
+              scale: 1,
+              duration: 0.3,
+            });
           },
+
           onLeave: () => {
-            gsap.to([barContainer, cursor], { opacity: 0, duration: 0.3 });
-            gsap.to(cursor, { scale: 0.6, duration: 0.3 });
+            gsap.to([cursor, barContainer], {
+              opacity: 0,
+              scale: 0.8,
+              duration: 0.3,
+            });
           },
+
           onEnterBack: () => {
-            gsap.to([barContainer, cursor], { opacity: 1, duration: 0.3 });
-            gsap.to(cursor, { scale: 1, duration: 0.3 });
+            gsap.to([cursor, barContainer], {
+              opacity: 1,
+              scale: 1,
+              duration: 0.3,
+            });
           },
+
           onLeaveBack: () => {
-            gsap.to([barContainer, cursor], { opacity: 0, duration: 0.3 });
-            gsap.to(cursor, { scale: 0.6, duration: 0.3 });
+            gsap.to([cursor, barContainer], {
+              opacity: 0,
+              scale: 0.8,
+              duration: 0.3,
+            });
           },
         },
       });
 
-      // 1. Full-span internal image scroll (Img 1)
+      /* Image Scroll */
       tl.to(innerImgOneRef.current, { y: "-25%", ease: "none" }, 0);
 
-      // 2. Slide 1 -> 2: Mask scales up and shifts
+      /* Mask */
       tl.to(
         maskWrapperRef.current,
         {
@@ -117,7 +176,7 @@ const Hero = () => {
         0,
       );
 
-      // 3. Slide 2 -> 3: Shrink Mask
+      /* Slide 2 → 3 */
       tl.to(maskWrapperRef.current, {
         width: "60vw",
         scale: 1,
@@ -125,7 +184,6 @@ const Hero = () => {
         duration: 1,
         ease: "power2.inOut",
       })
-        // Overlay Paragraph: Blur → Clear + Fade In
         .to(
           slide3TextRef.current,
           {
@@ -146,7 +204,7 @@ const Hero = () => {
           "<",
         );
 
-      // 4. Slide 3 -> 4: Blur + Fade Out + Image Swap
+      /* Slide 3 → 4 */
       tl.to(
         slide3TextRef.current,
         {
@@ -176,15 +234,8 @@ const Hero = () => {
         .to(imageOneRef.current, { opacity: 0, duration: 0.5 }, "<")
         .to(imageTwoRef.current, { opacity: 1, duration: 0.5 }, "<");
 
-      // Scroll the second image internal view during final stage
-      tl.to(
-        innerImgTwoRef.current,
-        {
-          y: "-20%",
-          ease: "none",
-        },
-        ">-0.5",
-      );
+      /* Final Scroll */
+      tl.to(innerImgTwoRef.current, { y: "-20%", ease: "none" }, ">-0.5");
     }, containerRef);
 
     return () => {
@@ -195,69 +246,51 @@ const Hero = () => {
 
   return (
     <div ref={containerRef} className="relative bg-[#13140E] text-white">
-      {/* Custom Cursor */}
-      <div
-        ref={cursorRef}
-        className="fixed top-0 left-0 w-16 h-16 rounded-full border border-white pointer-events-none z-100 opacity-0 flex items-center justify-center"
-      >
-        <span className="text-[10px] uppercase tracking-widest text-whitefont-bold">
-          Scroll
-        </span>
-      </div>
+      {/* Cursor */}
+      <CircularCursorProgress ref={cursorRef} circleRef={circleRef} />
 
-      {/* Progress Bar Container */}
+      {/* Bar */}
       <div
         ref={barContainerRef}
-        className="fixed right-6 top-1/2 -translate-y-1/2 h-64 w-0.5 bg-white/20 z-50 opacity-0 pointer-events-none"
+        className="fixed right-6 top-1/2 -translate-y-1/2 
+                   h-64 w-0.5 bg-white/20 z-50 
+                   opacity-0 pointer-events-none"
       >
         <div ref={barRef} className="w-full bg-[#EBFC72] h-0 origin-top" />
       </div>
 
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center z-0 pointer-events-none">
+      {/* Background */}
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center pointer-events-none">
         <div
           ref={maskWrapperRef}
-          className="relative w-full h-auto scale-[120%] aspect-1030/701"
+          className="relative w-full scale-[120%] aspect-1030/701"
         >
-          <div
-            ref={imageOneRef}
-            className="absolute inset-0 w-full h-full z-10"
-          >
+          <div ref={imageOneRef} className="absolute inset-0 z-10">
             <MaskedBackgroundImage
-              ref={innerImgOneRef} // Passing ref to internal <img>
+              ref={innerImgOneRef}
               imgUrl="/HeroImageOne.png"
-              className="w-full h-full"
+            />
+          </div>
+
+          <div ref={imageTwoRef} className="absolute inset-0 z-20 opacity-0">
+            <MaskedBackgroundImage
+              ref={innerImgTwoRef}
+              imgUrl="/HeroImageTwo.png"
             />
           </div>
 
           <div
-            ref={imageTwoRef}
-            className="absolute inset-0 w-full h-full z-20 opacity-0"
-          >
-            <MaskedBackgroundImage
-              ref={innerImgTwoRef} // Passing ref to internal <img>
-              imgUrl="/HeroImageTwo.png"
-              className="w-full h-full"
-            />
-          </div>
-          <div
             ref={demoTextRef}
             className="absolute inset-0 z-30 flex items-center justify-center
-              text-center
-              px-10
-              opacity-0
-              backdrop-blur-0
-              pointer-events-none
-              bg-black/10
-            "
+                       bg-black/10 pointer-events-none"
           >
             <HeroHotspots />
           </div>
         </div>
       </div>
 
-      {/* FOREGROUND (The Slides) */}
+      {/* Slides */}
       <div className="relative z-10 -mt-[100vh]">
-        {/* Slide 1 */}
         <div className="min-h-screen flex items-end p-5 pb-20">
           <div className="max-w-4xl">
             <AnimatedText
@@ -270,30 +303,27 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* Slide 2 */}
         <div className="min-h-screen flex items-center justify-end p-5">
           <HeroSlideText
             heading="Damaged Ecosystems"
-            description="Invasive species degrade ecosystems by overwhelming native wildlife and systems that drive costly ecological and economic decline."
+            description="Invasive species degrade ecosystems..."
           />
         </div>
 
-        {/* Slide 3 - Text starts hidden */}
         <div
           ref={slide3TextRef}
           className="min-h-screen flex items-center p-5 opacity-0"
         >
           <HeroSlideText
             heading="One Click Invasive Management"
-            description="Origin, Inversa's digital command center, deploys field specialists and management tools, targeting priority zones with precision to restore balance and deliver measurable ecological and economic impact."
+            description="Origin, Inversa's digital command center..."
           />
         </div>
 
-        {/* Slide 4 */}
         <div className="min-h-screen flex items-center justify-end p-5">
           <HeroSlideText
             heading="Restoration"
-            description="With invasives controlled, habitats rebound. Wildlife thrives, lands regenerate, and communities gain lasting ecological resialience and measurable economic development returns."
+            description="With invasives controlled..."
           />
         </div>
       </div>

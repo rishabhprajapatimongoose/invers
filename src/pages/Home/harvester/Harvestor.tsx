@@ -3,28 +3,37 @@
 import { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+
 import HarvestHeader from "./HarvestHeader";
 import HarvestorSlideOne from "./HarvestorSlideOne";
-import HarvestorSlideThree from "./HarvestorSlideThree";
 import HarvestorSlideTwo from "./HarvestorSlideTwo";
+import HarvestorSlideThree from "./HarvestorSlideThree";
+
+import CircularCursorProgress from "../../../components/common/CircularCursorProgress";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const Harvestor = () => {
+  /* Section / Pin */
   const sectionRef = useRef<HTMLDivElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
 
+  /* Images */
   const managerRef = useRef<HTMLImageElement>(null);
   const bg1Ref = useRef<HTMLImageElement>(null);
   const bg2Ref = useRef<HTMLImageElement>(null);
 
+  /* Slides */
   const slide1Ref = useRef<HTMLDivElement>(null);
   const slide2Ref = useRef<HTMLDivElement>(null);
   const slide3Ref = useRef<HTMLDivElement>(null);
 
+  /* Cursor + Circle */
   const cursorRef = useRef<HTMLDivElement>(null);
+  const circleRef = useRef<SVGCircleElement>(null);
+
+  /* Vertical Bar */
   const barRef = useRef<HTMLDivElement>(null);
-  // 1. Add a ref for the container so we can fade the whole thing in/out
   const barContainerRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -38,20 +47,31 @@ const Harvestor = () => {
       !slide2Ref.current ||
       !slide3Ref.current ||
       !cursorRef.current ||
+      !circleRef.current ||
       !barRef.current ||
       !barContainerRef.current
     )
       return;
 
     const cursor = cursorRef.current;
+    const circle = circleRef.current;
     const bar = barRef.current;
     const barContainer = barContainerRef.current;
 
-    // Mouse follow
+    /* Setup Circle Progress*/
+
+    const radius = 36;
+    const circumference = 2 * Math.PI * radius;
+
+    circle.style.strokeDasharray = `${circumference}`;
+    circle.style.strokeDashoffset = `${circumference}`;
+
+    /* Mouse Follow */
+
     const moveCursor = (e: MouseEvent) => {
       gsap.to(cursor, {
-        x: e.clientX - 32,
-        y: e.clientY - 32,
+        x: e.clientX - 40,
+        y: e.clientY - 40,
         duration: 0.15,
         ease: "power2.out",
       });
@@ -59,8 +79,10 @@ const Harvestor = () => {
 
     window.addEventListener("mousemove", moveCursor);
 
+    /* GSAP Context */
+
     const ctx = gsap.context(() => {
-      // Hide all slides first
+      /* Hide slides */
       gsap.set([slide1Ref.current, slide2Ref.current, slide3Ref.current], {
         opacity: 0,
       });
@@ -73,60 +95,80 @@ const Harvestor = () => {
           scrub: true,
           pin: pinRef.current,
 
-          // Progress handling
+          /* Progress Sync */
+
           onUpdate: (self) => {
-            const progress = self.progress; // 0 → 1
+            const progress = self.progress;
             const percent = Math.round(progress * 100);
 
-            // Progress bar height
+            /* Vertical bar */
             gsap.to(bar, {
               height: `${progress * 100}%`,
               duration: 0.1,
               overwrite: true,
             });
 
-            // Cursor text
+            /* Circle */
+            const offset = circumference * (1 - progress);
+
+            gsap.to(circle, {
+              strokeDashoffset: offset,
+              duration: 0.1,
+              overwrite: true,
+            });
+
+            /* Text */
             const span = cursor.querySelector("span");
             if (span) span.innerText = `${percent}%`;
           },
 
-          // --- VISIBILITY LOGIC ADDED HERE ---
+          /* Visibility */
 
-          // Show cursor AND bar
           onEnter: () => {
-            gsap.to([cursor, barContainer], { opacity: 1, duration: 0.2 });
-            gsap.to(cursor, { scale: 1, duration: 0.2 });
+            gsap.to([cursor, barContainer], {
+              opacity: 1,
+              scale: 1,
+              duration: 0.2,
+            });
           },
 
-          // Hide cursor AND bar
           onLeave: () => {
-            gsap.to([cursor, barContainer], { opacity: 0, duration: 0.2 });
-            gsap.to(cursor, { scale: 0.6, duration: 0.2 });
+            gsap.to([cursor, barContainer], {
+              opacity: 0,
+              scale: 0.8,
+              duration: 0.2,
+            });
           },
 
-          // Show when scrolling back up
           onEnterBack: () => {
-            gsap.to([cursor, barContainer], { opacity: 1, duration: 0.2 });
-            gsap.to(cursor, { scale: 1, duration: 0.2 });
+            gsap.to([cursor, barContainer], {
+              opacity: 1,
+              scale: 1,
+              duration: 0.2,
+            });
           },
 
-          // Hide when scrolling back past the top
           onLeaveBack: () => {
-            gsap.to([cursor, barContainer], { opacity: 0, duration: 0.2 });
-            gsap.to(cursor, { scale: 0.6, duration: 0.2 });
+            gsap.to([cursor, barContainer], {
+              opacity: 0,
+              scale: 0.8,
+              duration: 0.2,
+            });
           },
         },
       });
 
-      const FAST = 0.01;
-      /* Fade background */
-      tl.to(bg1Ref.current, { opacity: 0 , duration: FAST}, 0);
-      tl.to(bg2Ref.current, { opacity: 0 , duration: FAST}, 0);
+      /* Slides TimeLine */
 
+      const FAST = 0.01;
+
+      /* Fade BG */
+      tl.to(bg1Ref.current, { opacity: 0, duration: FAST }, 0);
+      tl.to(bg2Ref.current, { opacity: 0, duration: FAST }, 0);
 
       /* Manager → Slide 1 */
-      tl.to(managerRef.current, { opacity: 0, duration: FAST }, 0.2);
-      tl.to(slide1Ref.current, { opacity: 1, duration: FAST }, 0.2);
+      tl.to(managerRef.current, { opacity: 0, duration: FAST }, 0);
+      tl.to(slide1Ref.current, { opacity: 1, duration: FAST }, 0);
 
       /* Slide 1 → Slide 2 */
       tl.to(slide1Ref.current, { opacity: 0, duration: FAST }, 0.33);
@@ -136,9 +178,13 @@ const Harvestor = () => {
       tl.to(slide2Ref.current, { opacity: 0, duration: FAST }, 0.66);
       tl.to(slide3Ref.current, { opacity: 1, duration: FAST }, 0.66);
 
-      //   holding the slide3
-      tl.to(slide3Ref.current, { opacity: 1, duration: 0.001 }, 1);
+      /* Hold */
+      tl.to(slide3Ref.current, { opacity: 1, duration: FAST }, 1);
     }, sectionRef);
+
+    /* -----------------------------
+       Cleanup
+    ----------------------------- */
 
     return () => {
       window.removeEventListener("mousemove", moveCursor);
@@ -150,11 +196,13 @@ const Harvestor = () => {
     <section className="pt-20 bg-[#13140E] text-white">
       <HarvestHeader />
 
-      <div ref={sectionRef} className="relative mt-20 ">
-        {/* PINNED VIEWPORT */}
+      {/* Section */}
+      <div ref={sectionRef} className="relative mt-20">
+        {/* Pin */}
         <div
           ref={pinRef}
-          className="relative h-screen w-full overflow-hidden flex items-center justify-center"
+          className="relative h-screen w-full overflow-hidden 
+                     flex items-center justify-center"
         >
           {/* Backgrounds */}
           <img
@@ -177,27 +225,24 @@ const Harvestor = () => {
           />
 
           {/* Slides */}
-          <div className="absolute inset-0 flex flex-col items-center justify-start z-20">
-            {/* Slide 1 */}
+          <div className="absolute inset-0 z-20">
             <div
               ref={slide1Ref}
-              className="flex items-center justify-center h-full w-full"
+              className="flex items-center justify-center h-full"
             >
               <HarvestorSlideOne />
             </div>
 
-            {/* Slide 2 */}
             <div
               ref={slide2Ref}
-              className="absolute top-0 flex items-center justify-center h-full w-full"
+              className="absolute inset-0 flex items-center justify-center"
             >
               <HarvestorSlideTwo />
             </div>
 
-            {/* Slide 3 */}
             <div
               ref={slide3Ref}
-              className="absolute top-0 flex items-center justify-center h-full w-full"
+              className="absolute inset-0 flex items-center justify-center"
             >
               <HarvestorSlideThree />
             </div>
@@ -205,19 +250,15 @@ const Harvestor = () => {
         </div>
       </div>
 
-      {/* Custom Cursor */}
-      <div
-        ref={cursorRef}
-        className="fixed top-0 left-0 w-16 h-16 rounded-full border border-[#ebfc72] pointer-events-none z-[99] opacity-0 flex items-center justify-center"
-      >
-        <span className="text-xs">0%</span>
-      </div>
+      {/* Circular Cursor */}
+      <CircularCursorProgress ref={cursorRef} circleRef={circleRef} />
 
-      {/* Progress Bar Container */}
-      {/* ADDED: ref={barContainerRef} and opacity-0 */}
+      {/* Vertical Bar */}
       <div
         ref={barContainerRef}
-        className="fixed right-6 top-1/2 -translate-y-1/2 h-64 w-0.5 bg-white/20 z-[99] opacity-0 pointer-events-none"
+        className="fixed right-6 top-1/2 -translate-y-1/2 
+                   h-64 w-0.5 bg-white/20 z-[99] 
+                   opacity-0 pointer-events-none"
       >
         <div ref={barRef} className="w-full bg-[#EBFC72] h-0 origin-top" />
       </div>
