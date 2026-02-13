@@ -28,8 +28,8 @@ const Hero = () => {
   const demoTextRef = useRef<HTMLDivElement>(null);
 
   /* Cursor */
-  const cursorRef = useRef<HTMLDivElement>(null);
-  const circleRef = useRef<SVGCircleElement>(null);
+  const cursorRef = useRef<HTMLDivElement | null>(null);
+  const circleRef = useRef<SVGCircleElement | null>(null);
 
   /* Vertical Bar */
   const barRef = useRef<HTMLDivElement>(null);

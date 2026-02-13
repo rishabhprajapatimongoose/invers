@@ -9,14 +9,14 @@ type Props = {
 const CircularCursorProgress = forwardRef<
   HTMLDivElement,
   {
-    circleRef: React.RefObject<SVGCircleElement>;
+    circleRef: React.RefObject<SVGCircleElement | null>;
   } & Props
 >(({ circleRef }, cursorRef) => {
   return (
     <div
       ref={cursorRef}
       className="fixed top-0 left-0 w-20 h-20 pointer-events-none 
-                 z-[999] opacity-0 flex items-center justify-center"
+                 z-999 opacity-0 flex items-center justify-center"
       style={{
         /* The parent moves INSTANTLY to follow the mouse */
         transition: "transform 0.05s linear",

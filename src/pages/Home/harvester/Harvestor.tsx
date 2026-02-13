@@ -252,7 +252,7 @@ const Harvestor = () => {
       <div
         ref={barContainerRef}
         className="fixed right-6 top-1/2 -translate-y-1/2 
-                   h-64 w-0.5 bg-white/20 z-[99] 
+                   h-64 w-0.5 bg-white/20 z-99 
                    opacity-0 pointer-events-none"
       >
         <div ref={barRef} className="w-full bg-[#EBFC72] h-0 origin-top" />
