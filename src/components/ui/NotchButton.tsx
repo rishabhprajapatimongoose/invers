@@ -16,6 +16,7 @@ const NotchedButton = ({
         cursor-pointer
         ${className || "bg-black text-white"}
         notched-btn
+        rounded-sm  
         relative overflow-hidden
         px-5 py-3
         font-jetbrains text-sm uppercase
